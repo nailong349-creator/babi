@@ -224,31 +224,40 @@ function unlock(){
 }
 
 // CREATE MONTHS
-months.forEach((m,mi)=>{
-    const month=document.createElement("div");
-    month.className="month";
-    const grid=document.createElement("div");
-    grid.className="grid";
+months.forEach((m, mi) => {
+    const month = document.createElement("div");
+    month.className = "month";
 
-    for(let i=0;i<30;i++){
-        const slot=document.createElement("div");
-        slot.className="slot";
-        const key=`m${mi}_p${i}`;
-        const saved=localStorage.getItem(key);
+    const grid = document.createElement("div");
+    grid.className = "grid";
 
-        if(saved){
-            slot.innerHTML=`<img src="${saved}">`;
-            slot.onclick=()=>openViewer(saved,slot,key);
-            slot.oncontextmenu=e=>{e.preventDefault();removeImage(slot,key);}
+    for (let i = 0; i < 30; i++) {
+        const slot = document.createElement("div");
+        slot.className = "slot";
+
+        // THIS IS THE KEY YOU MUST USE
+        const key = `${months[mi]}_${i}`;
+
+        // LOAD IMAGE
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            slot.innerHTML = `<img src="${saved}">`;
+            slot.onclick = () => openViewer(saved, slot, key);
         } else {
-            slot.innerHTML="<span>Upload</span>";
-            slot.onclick=()=>uploadImage(slot,key);
+            slot.innerHTML = "<span>Upload</span>";
+            slot.onclick = () => uploadImage(slot, key);
         }
 
-        // LONG PRESS (MOBILE)
+        // REMOVE ON RIGHT CLICK
+        slot.oncontextmenu = (e) => {
+            e.preventDefault();
+            removeImage(slot, key);
+        };
+
+        // LONG PRESS REMOVE
         let timer;
-        slot.ontouchstart=()=>timer=setTimeout(()=>removeImage(slot,key),700);
-        slot.ontouchend=()=>clearTimeout(timer);
+        slot.ontouchstart = () => timer = setTimeout(() => removeImage(slot, key), 700);
+        slot.ontouchend = () => clearTimeout(timer);
 
         grid.appendChild(slot);
     }
@@ -256,31 +265,23 @@ months.forEach((m,mi)=>{
     month.appendChild(grid);
     album.appendChild(month);
 });
-
+    
 // UPLOAD
-function uploadImage(slot,key){
-    const input=document.createElement("input");
-    input.type="file";
-    input.accept="image/*";
-    input.onchange=e=>{
-        const r=new FileReader();
-        r.onload=()=>{
-            slot.innerHTML=`<img src="${r.result}">`;
-            slot.onclick=()=>openViewer(r.result,slot,key);
-            slot.oncontextmenu=e=>{e.preventDefault();removeImage(slot,key);}
-            localStorage.setItem(key,r.result);
+function uploadImage(slot, key) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            slot.innerHTML = `<img src="${reader.result}">`;
+            slot.onclick = () => openViewer(reader.result, slot, key);
+            localStorage.setItem(key, reader.result);
         };
-        r.readAsDataURL(e.target.files[0]);
+        reader.readAsDataURL(e.target.files[0]);
     };
     input.click();
-}
-
-// REMOVE
-function removeImage(slot,key){
-    if(!confirm("Remove this picture?")) return;
-    localStorage.removeItem(key);
-    slot.innerHTML="<span>Upload</span>";
-    slot.onclick=()=>uploadImage(slot,key);
 }
 
 // VIEWER
@@ -321,3 +322,4 @@ showMonth(currentMonth);
 
 </body>
 </html>
+
